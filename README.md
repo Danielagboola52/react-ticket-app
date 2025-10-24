@@ -178,6 +178,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 **Daniel Agboola**
 - GitHub: [@Danielagboola52](https://github.com/Danielagboola52)
+- **Live Application**: https://zesty-pudding-d65acf.netlify.app/
 
 ## 🙏 Acknowledgments
 
