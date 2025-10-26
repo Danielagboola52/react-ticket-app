@@ -8,6 +8,7 @@ const Tickets = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [tickets, setTickets] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [form, setForm] = useState({
     id: null,
     title: '',
@@ -22,12 +23,39 @@ const Tickets = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    getCurrentUser();
     loadTickets();
   }, []);
 
+  const getCurrentUser = () => {
+    const userJSON = localStorage.getItem('ticketapp_current_user');
+    if (!userJSON) {
+      navigate('/login');
+      return;
+    }
+    const user = JSON.parse(userJSON);
+    setCurrentUser(user);
+  };
+
+  const getUserTicketsKey = () => {
+    if (!currentUser) return null;
+    return `tickets_${currentUser.id}`;
+  };
+
   const loadTickets = () => {
-    const stored = localStorage.getItem('tickets');
+    const userJSON = localStorage.getItem('ticketapp_current_user');
+    if (!userJSON) return;
+    
+    const user = JSON.parse(userJSON);
+    const ticketsKey = `tickets_${user.id}`;
+    const stored = localStorage.getItem(ticketsKey);
     setTickets(stored ? JSON.parse(stored) : []);
+  };
+
+  const saveTickets = (updatedTickets) => {
+    if (!currentUser) return;
+    const ticketsKey = getUserTicketsKey();
+    localStorage.setItem(ticketsKey, JSON.stringify(updatedTickets));
   };
 
   const openCreateModal = () => {
@@ -94,14 +122,15 @@ const Tickets = () => {
       const newTicket = {
         ...form,
         id: Date.now(),
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        userId: currentUser.id
       };
       updatedTickets = [newTicket, ...tickets];
       showToastMessage('Ticket created successfully!', 'success');
     }
 
     setTickets(updatedTickets);
-    localStorage.setItem('tickets', JSON.stringify(updatedTickets));
+    saveTickets(updatedTickets);
     closeModal();
   };
 
@@ -113,7 +142,7 @@ const Tickets = () => {
   const deleteTicket = () => {
     const updatedTickets = tickets.filter(t => t.id !== ticketToDelete.id);
     setTickets(updatedTickets);
-    localStorage.setItem('tickets', JSON.stringify(updatedTickets));
+    saveTickets(updatedTickets);
     setShowDeleteModal(false);
     showToastMessage('Ticket deleted successfully', 'success');
     setTicketToDelete(null);
@@ -147,6 +176,7 @@ const Tickets = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('ticketapp_session');
+    localStorage.removeItem('ticketapp_current_user');
     navigate('/');
   };
 

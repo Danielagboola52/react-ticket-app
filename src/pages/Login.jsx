@@ -11,13 +11,42 @@ const Login = () => {
     e.preventDefault();
     setError('');
 
+    // Validate inputs
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
     }
 
-    const token = 'demo_token_' + Date.now();
+    // Get users from localStorage
+    const usersJSON = localStorage.getItem('ticketapp_users');
+    const users = usersJSON ? JSON.parse(usersJSON) : [];
+
+    // Check if users exist
+    if (users.length === 0) {
+      setError('No account found. Please sign up first.');
+      return;
+    }
+
+    // Find user by email
+    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+    if (!user) {
+      setError('Invalid email or password');
+      return;
+    }
+
+    // Check password
+    if (user.password !== password) {
+      setError('Invalid email or password');
+      return;
+    }
+
+    // Login successful - create session
+    const token = 'token_' + user.id + '_' + Date.now();
     localStorage.setItem('ticketapp_session', token);
+    localStorage.setItem('ticketapp_current_user', JSON.stringify(user));
+
+    // Redirect to dashboard
     navigate('/dashboard');
   };
 

@@ -6,14 +6,37 @@ const Dashboard = () => {
   const [openTickets, setOpenTickets] = useState(0);
   const [resolvedTickets, setResolvedTickets] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userName, setUserName] = useState('User');
   const navigate = useNavigate();
 
   useEffect(() => {
+    getCurrentUser();
     loadStats();
   }, []);
 
+  const getCurrentUser = () => {
+    const userJSON = localStorage.getItem('ticketapp_current_user');
+    if (!userJSON) {
+      navigate('/login');
+      return;
+    }
+    const user = JSON.parse(userJSON);
+    setCurrentUser(user);
+    setUserName(user.name || 'User');
+  };
+
+  const getUserTicketsKey = (user) => {
+    return `tickets_${user.id}`;
+  };
+
   const loadStats = () => {
-    const tickets = JSON.parse(localStorage.getItem('tickets') || '[]');
+    const userJSON = localStorage.getItem('ticketapp_current_user');
+    if (!userJSON) return;
+    
+    const user = JSON.parse(userJSON);
+    const tickets = JSON.parse(localStorage.getItem(getUserTicketsKey(user)) || '[]');
+    
     setTotalTickets(tickets.length);
     setOpenTickets(tickets.filter(t => t.status === 'open').length);
     setResolvedTickets(tickets.filter(t => t.status === 'closed').length);
@@ -21,6 +44,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('ticketapp_session');
+    localStorage.removeItem('ticketapp_current_user');
     navigate('/');
   };
 
@@ -45,7 +69,10 @@ const Dashboard = () => {
 
       <div className="dashboard-content">
         <div className="container">
-          <h1 className="page-title">Dashboard</h1>
+          <div className="welcome-section">
+            <h1 className="page-title">Welcome, {userName}! 👋</h1>
+            <p className="page-subtitle">Here's an overview of your tickets</p>
+          </div>
 
           <div className="stats-grid">
             <div className="stat-box">

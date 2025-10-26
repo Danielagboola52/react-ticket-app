@@ -14,6 +14,7 @@ const Signup = () => {
     setError('');
     setSuccess('');
 
+    // Validate inputs
     if (!name || !email || !password) {
       setError('Please fill in all fields');
       return;
@@ -24,11 +25,41 @@ const Signup = () => {
       return;
     }
 
+    // Get existing users from localStorage
+    const usersJSON = localStorage.getItem('ticketapp_users');
+    const users = usersJSON ? JSON.parse(usersJSON) : [];
+
+    // Check if email already exists
+    const emailExists = users.some(user => user.email.toLowerCase() === email.toLowerCase());
+    
+    if (emailExists) {
+      setError('An account with this email already exists. Please login instead.');
+      return;
+    }
+
+    // Create new user object
+    const newUser = {
+      id: 'user_' + Date.now(),
+      name: name,
+      email: email.toLowerCase(),
+      password: password, // In production, this should be hashed!
+      createdAt: new Date().toISOString()
+    };
+
+    // Add new user to users array
+    users.push(newUser);
+
+    // Save updated users array to localStorage
+    localStorage.setItem('ticketapp_users', JSON.stringify(users));
+
+    // Create session for the new user
+    const token = 'token_' + newUser.id + '_' + Date.now();
+    localStorage.setItem('ticketapp_session', token);
+    localStorage.setItem('ticketapp_current_user', JSON.stringify(newUser));
+
     setSuccess('Account created successfully! Redirecting...');
 
     setTimeout(() => {
-      const token = 'demo_token_' + Date.now();
-      localStorage.setItem('ticketapp_session', token);
       navigate('/dashboard');
     }, 1500);
   };
